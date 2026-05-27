@@ -1,0 +1,130 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+enum GlobalRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  BANNED
+  PENDING
+  DELETED
+}
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  APPLE
+  FACEBOOK
+}
+
+enum TokenType {
+  EMAIL_VERIFICATION
+  PASSWORD_RESET
+  OTP_LOGIN
+}
+
+model User {
+  id                      BigInt               @id @default(autoincrement())
+  uuid                    String               @unique @db.Char(36)
+  email                   String               @unique @db.VarChar(255)
+  globalRole              GlobalRole           @default(USER) @map("global_role")
+  status                  UserStatus           @default(ACTIVE)
+  twoFactorEnabled        Boolean              @default(false) @map("two_factor_enabled")
+  twoFactorSecret         String?              @db.Text @map("two_factor_secret")
+  twoFactorBackupCodes    Json?                @map("two_factor_backup_codes")
+  lastLoginAt             DateTime?            @map("last_login_at")
+  createdAt               DateTime             @default(now()) @map("created_at")
+  updatedAt               DateTime             @updatedAt @map("updated_at")
+  deletedAt               DateTime?            @map("deleted_at")
+  
+  // Relations
+  profile                 UserProfile?
+  authAccounts            AuthAccount[]
+  sessions                UserSession[]
+  verificationTokens      VerificationToken[]
+
+  @@map("users")
+}
+
+model UserProfile {
+  id          BigInt    @id @default(autoincrement())
+  userId      BigInt    @unique @map("user_id")
+  displayName String?   @db.VarChar(100) @map("display_name")
+  username    String?   @unique @db.VarChar(50)
+  avatarUrl   String?   @db.Text @map("avatar_url")
+  bio         String?   @db.Text
+  birthdate   DateTime? @db.Date
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_profiles")
+}
+
+model AuthAccount {
+  id             BigInt       @id @default(autoincrement())
+  userId         BigInt       @map("user_id")
+  provider       AuthProvider
+  providerUserId String?      @db.VarChar(255) @map("provider_user_id")
+  providerEmail  String?      @db.VarChar(255) @map("provider_email")
+  passwordHash   String?      @db.Text @map("password_hash")
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerUserId], name: "uq_provider_account")
+  @@map("auth_accounts")
+}
+
+model UserSession {
+  id               BigInt    @id @default(autoincrement())
+  userId           BigInt    @map("user_id")
+  refreshTokenHash String    @db.VarChar(255) @map("refresh_token_hash")
+  deviceName       String?   @db.VarChar(255) @map("device_name")
+  ipAddress        String?   @db.VarChar(45) @map("ip_address")
+  userAgent        String?   @db.Text @map("user_agent")
+  lastUsedAt       DateTime? @map("last_used_at")
+  expiredAt        DateTime  @map("expired_at")
+  revokedAt        DateTime? @map("revoked_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+}
+
+model VerificationToken {
+  id        BigInt    @id @default(autoincrement())
+  userId    BigInt    @map("user_id")
+  tokenType TokenType @map("token_type")
+  token     String    @unique @db.VarChar(255)
+  expiredAt DateTime  @map("expired_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, tokenType], name: "idx_verification_user_type")
+  @@map("verification_tokens")
+}
