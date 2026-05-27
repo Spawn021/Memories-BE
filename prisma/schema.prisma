@@ -6,6 +6,7 @@
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -39,7 +40,7 @@ enum TokenType {
 }
 
 model User {
-  id                      BigInt               @id @default(autoincrement())
+  id                      Int                  @id @default(autoincrement())
   uuid                    String               @unique @db.Char(36)
   email                   String               @unique @db.VarChar(255)
   globalRole              GlobalRole           @default(USER) @map("global_role")
@@ -62,8 +63,8 @@ model User {
 }
 
 model UserProfile {
-  id          BigInt    @id @default(autoincrement())
-  userId      BigInt    @unique @map("user_id")
+  id          Int       @id @default(autoincrement())
+  userId      Int       @unique @map("user_id")
   displayName String?   @db.VarChar(100) @map("display_name")
   username    String?   @unique @db.VarChar(50)
   avatarUrl   String?   @db.Text @map("avatar_url")
@@ -79,8 +80,8 @@ model UserProfile {
 }
 
 model AuthAccount {
-  id             BigInt       @id @default(autoincrement())
-  userId         BigInt       @map("user_id")
+  id             Int          @id @default(autoincrement())
+  userId         Int          @map("user_id")
   provider       AuthProvider
   providerUserId String?      @db.VarChar(255) @map("provider_user_id")
   providerEmail  String?      @db.VarChar(255) @map("provider_email")
@@ -96,12 +97,13 @@ model AuthAccount {
 }
 
 model UserSession {
-  id               BigInt    @id @default(autoincrement())
-  userId           BigInt    @map("user_id")
+  id               Int       @id @default(autoincrement())
+  userId           Int       @map("user_id")
   refreshTokenHash String    @db.VarChar(255) @map("refresh_token_hash")
   deviceName       String?   @db.VarChar(255) @map("device_name")
   ipAddress        String?   @db.VarChar(45) @map("ip_address")
   userAgent        String?   @db.Text @map("user_agent")
+  rememberMe       Boolean   @default(false) @map("remember_me")
   lastUsedAt       DateTime? @map("last_used_at")
   expiredAt        DateTime  @map("expired_at")
   revokedAt        DateTime? @map("revoked_at")
@@ -114,8 +116,8 @@ model UserSession {
 }
 
 model VerificationToken {
-  id        BigInt    @id @default(autoincrement())
-  userId    BigInt    @map("user_id")
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
   tokenType TokenType @map("token_type")
   token     String    @unique @db.VarChar(255)
   expiredAt DateTime  @map("expired_at")
