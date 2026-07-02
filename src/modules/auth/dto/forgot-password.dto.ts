@@ -7,4 +7,3 @@ export const ForgotPasswordSchema = z.object({
 })
 
 export class ForgotPasswordDto extends createZodDto(ForgotPasswordSchema) {}
-export interface ForgotPasswordDto extends z.infer<typeof ForgotPasswordSchema> {}

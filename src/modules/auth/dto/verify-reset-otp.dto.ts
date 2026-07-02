@@ -8,4 +8,3 @@ export const VerifyResetOtpSchema = z.object({
 })
 
 export class VerifyResetOtpDto extends createZodDto(VerifyResetOtpSchema) {}
-export interface VerifyResetOtpDto extends z.infer<typeof VerifyResetOtpSchema> {}

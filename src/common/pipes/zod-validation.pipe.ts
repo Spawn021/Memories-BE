@@ -12,6 +12,11 @@ export class ZodValidationPipe implements PipeTransform {
 
     let schema = (metatype as any).schema as ZodSchema
 
+    // Default empty body to empty object to allow optional fields / defaults to resolve properly
+    if (metadata.type === 'body' && !metadata.data && value == null) {
+      value = {}
+    }
+
     if (schema instanceof ZodObject) {
       schema = schema.strict()
     }

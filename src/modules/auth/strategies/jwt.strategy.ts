@@ -63,6 +63,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       email: user.email,
       globalRole: user.globalRole,
       sessionId: parseInt(payload.sessionId, 10),
+      displayName: user.profile?.displayName,
+      username: user.profile?.username,
     }
   }
 }

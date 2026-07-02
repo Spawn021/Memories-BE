@@ -9,4 +9,3 @@ export const LoginSchema = z.object({
 })
 
 export class LoginDto extends createZodDto(LoginSchema) {}
-export interface LoginDto extends z.infer<typeof LoginSchema> {}

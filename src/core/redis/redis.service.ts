@@ -16,6 +16,7 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
     })
 
     this.redisClient.on('error', err => {
+      // eslint-disable-next-line no-console
       console.error('Redis connection error:', err)
     })
   }

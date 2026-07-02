@@ -1,3 +1,5 @@
+import { SpaceType } from 'generated/prisma/enums'
+
 export const CACHE_STATUS = {
   ACTIVE: 'active',
   REVOKED: 'revoked',
@@ -8,3 +10,10 @@ export const CACHE_TTL = {
   REVOKED_SESSION: 3600, // 1 hour in seconds
   BLACKLIST_RESET_TOKEN: 3 * 60,
 } as const
+
+export const SPACE_MEMBER_LIMITS: Record<SpaceType, number> = {
+  PERSONAL: 1,
+  COUPLE: 2,
+  FRIENDS: 50,
+  FAMILY: Number.MAX_SAFE_INTEGER,
+}

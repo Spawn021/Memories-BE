@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Response } from 'express'
 import {
   REDIS_PREFIX,

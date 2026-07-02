@@ -12,4 +12,3 @@ export const RegisterSchema = z.object({
   username: z.string().optional(),
 })
 export class RegisterDto extends createZodDto(RegisterSchema) {}
-export interface RegisterDto extends z.infer<typeof RegisterSchema> {}

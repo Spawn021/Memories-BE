@@ -6,6 +6,7 @@ import { RedisModule } from './core/redis/redis.module'
 import { MailModule } from './core/mail/mail.module'
 import { UsersModule } from './modules/users/users.module'
 import { AuthModule } from './modules/auth/auth.module'
+import { SpacesModule } from './modules/spaces/spaces.module'
 import { APP_GUARD } from '@nestjs/core'
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard'
 import { RolesGuard } from './common/guards/roles.guard'
@@ -19,6 +20,7 @@ import { ScheduleModule } from '@nestjs/schedule'
     MailModule,
     UsersModule,
     AuthModule,
+    SpacesModule,
     ScheduleModule.forRoot(),
   ],
   controllers: [AppController],

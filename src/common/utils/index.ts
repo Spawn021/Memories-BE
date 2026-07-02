@@ -44,3 +44,18 @@ export const parseDurationToMs = (duration: string | undefined, defaultMs: numbe
       return defaultMs
   }
 }
+
+/**
+ * Generates a URL-friendly slug from a given string.
+ */
+export const generateSlug = (name: string): string => {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[đĐ]/g, 'd')
+    .replace(/[^a-z0-9\s-]/g, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+}

@@ -58,6 +58,10 @@ model User {
   authAccounts            AuthAccount[]
   sessions                UserSession[]
   verificationTokens      VerificationToken[]
+  ownedSpaces             Space[]              @relation("OwnedSpaces")
+  memberships             SpaceMember[]        @relation("UserMemberships")
+  invitesCreated          SpaceInvite[]        @relation("InvitesCreated")
+  membersInvited          SpaceMember[]        @relation("MembersInvited")
 
   @@map("users")
 }
@@ -129,4 +133,96 @@ model VerificationToken {
 
   @@index([userId, tokenType], name: "idx_verification_user_type")
   @@map("verification_tokens")
+}
+
+enum SpaceVisibility {
+  PRIVATE
+  PUBLIC
+}
+
+enum SpaceType {
+  PERSONAL
+  COUPLE
+  FAMILY
+  FRIENDS
+}
+
+enum SpaceRole {
+  OWNER
+  ADMIN
+  CONTRIBUTOR
+  VIEWER
+}
+
+enum SpaceMemberStatus {
+  PENDING
+  ACTIVE
+  REJECTED
+}
+
+model Space {
+  id          Int             @id @default(autoincrement())
+  uuid        String          @unique @db.Char(36)
+  name        String          @db.VarChar(255)
+  slug        String          @unique @db.VarChar(255)
+  description String?         @db.Text
+  avatarUrl   String?         @db.Text @map("avatar_url")
+  coverUrl    String?         @db.Text @map("cover_url")
+  type        SpaceType       @default(FRIENDS)
+  visibility  SpaceVisibility @default(PUBLIC)
+  ownerId     Int             @map("owner_id")
+  themeKey    String          @default("default") @map("theme_key")
+  layoutKey   String          @default("timeline") @map("layout_key")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+  deletedAt   DateTime?       @map("deleted_at")
+
+  // Relations
+  owner       User            @relation("OwnedSpaces", fields: [ownerId], references: [id])
+  members     SpaceMember[]
+  invites     SpaceInvite[]
+
+  @@map("spaces")
+}
+
+model SpaceMember {
+  id                 Int               @id @default(autoincrement())
+  spaceId            Int               @map("space_id")
+  userId             Int               @map("user_id")
+  role               SpaceRole         @default(CONTRIBUTOR)
+  status             SpaceMemberStatus @default(ACTIVE)
+  joinRequestMessage String?           @db.Text @map("join_request_message")
+  joinedAt           DateTime          @default(now()) @map("joined_at")
+  invitedBy          Int?              @map("invited_by")
+  createdAt          DateTime          @default(now()) @map("created_at")
+  updatedAt          DateTime          @default(now()) @updatedAt @map("updated_at")
+
+  // Relations
+  space     Space     @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  user      User      @relation("UserMemberships", fields: [userId], references: [id], onDelete: Cascade)
+  inviter   User?     @relation("MembersInvited", fields: [invitedBy], references: [id], onDelete: SetNull)
+
+  @@unique([spaceId, userId], name: "uq_space_user")
+  @@map("space_members")
+}
+
+model SpaceInvite {
+  id               Int       @id @default(autoincrement())
+  spaceId          Int       @map("space_id")
+  role             SpaceRole @default(CONTRIBUTOR)
+  token            String    @unique @db.VarChar(255)
+  email            String?   @db.VarChar(255)
+  message          String?   @db.Text
+  requiresApproval Boolean   @default(true) @map("requires_approval")
+  isRevoked        Boolean   @default(false) @map("is_revoked")
+  expiresAt        DateTime  @map("expires_at")
+  createdBy        Int       @map("created_by")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  space     Space     @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  creator   User      @relation("InvitesCreated", fields: [createdBy], references: [id], onDelete: Cascade)
+
+  @@index([spaceId, expiresAt], name: "idx_space_invites_lookup")
+  @@map("space_invites")
 }

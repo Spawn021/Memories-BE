@@ -68,4 +68,41 @@ export class MailService {
       `,
     })
   }
+
+  async sendSpaceInvite(
+    email: string,
+    spaceName: string,
+    token: string,
+    inviterName: string,
+    message?: string,
+  ) {
+    const frontendUrl = process.env.FRONTEND_URL
+    const inviteUrl = `${frontendUrl}/spaces/invite/accept?token=${token}`
+
+    const messageHtml = message
+      ? `<div style="background-color: #f9f9f9; border-left: 4px solid #4F46E5; padding: 12px; margin: 15px 0; font-style: italic; color: #555;">
+          "${message}"
+         </div>`
+      : ''
+
+    return this.sendMail({
+      to: email,
+      subject: `Invitation to join "${spaceName}" on Memories`,
+      text: `Hello!\n\n${inviterName} has invited you to join the space "${spaceName}" on Memories.\n\n${message ? `Personal Message:\n"${message}"\n\n` : ''}To accept the invitation, please open the link below:\n\n${inviteUrl}\n\nBest regards,\nThe Memories Team`,
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 5px;">
+          <h2 style="color: #333;">Invitation to join "${spaceName}"</h2>
+          <p><strong>${inviterName}</strong> has invited you to join their space on Memories platform.</p>
+          ${messageHtml}
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${inviteUrl}" style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-weight: bold; display: inline-block;">Accept Invitation</a>
+          </div>
+          <p style="color: #666; font-size: 13px;">If the button above does not work, copy and paste this URL into your browser:</p>
+          <p style="color: #4F46E5; font-size: 13px; word-break: break-all;">${inviteUrl}</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+          <p>Best regards,<br>The Memories Team</p>
+        </div>
+      `,
+    })
+  }
 }

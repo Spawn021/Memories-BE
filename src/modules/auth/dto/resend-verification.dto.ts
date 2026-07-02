@@ -7,4 +7,3 @@ export const ResendVerificationSchema = z.object({
 })
 
 export class ResendVerificationDto extends createZodDto(ResendVerificationSchema) {}
-export interface ResendVerificationDto extends z.infer<typeof ResendVerificationSchema> {}

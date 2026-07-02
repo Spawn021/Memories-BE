@@ -8,4 +8,3 @@ export const VerifyEmailSchema = z.object({
 })
 
 export class VerifyEmailDto extends createZodDto(VerifyEmailSchema) {}
-export interface VerifyEmailDto extends z.infer<typeof VerifyEmailSchema> {}
