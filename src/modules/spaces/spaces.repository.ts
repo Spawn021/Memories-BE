@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common'
 import { PrismaService } from '../../core/prisma/prisma.service'
 import { Prisma, SpaceRole, SpaceMemberStatus } from '../../../generated/prisma/client'
 import { paginate, PaginateOptions } from '../../common/utils/prisma-paginate'
+import { GetSpacesDto } from './dto/get-spaces.dto'
 
 export interface SpaceMemberFilter {
   status?: SpaceMemberStatus
@@ -42,19 +43,11 @@ export class SpacesRepository {
     })
   }
 
-  async findBySlug(slug: string) {
+  async findByUuidOrSlug(identifier: string) {
     return this.prisma.space.findFirst({
-      where: { slug, deletedAt: null },
-    })
-  }
-
-  async findManyByUserId(userId: number) {
-    return this.prisma.space.findMany({
       where: {
+        OR: [{ uuid: identifier }, { slug: identifier }],
         deletedAt: null,
-        members: {
-          some: { userId },
-        },
       },
       include: {
         members: {
@@ -66,6 +59,74 @@ export class SpacesRepository {
         },
       },
     })
+  }
+
+  async findBySlug(slug: string) {
+    return this.prisma.space.findFirst({
+      where: { slug, deletedAt: null },
+    })
+  }
+
+  async findManyForUser(userId: number, dto: GetSpacesDto) {
+    const where: Prisma.SpaceWhereInput = {
+      deletedAt: null,
+    }
+
+    if (dto.role === 'OWNER') {
+      where.members = {
+        some: {
+          userId,
+          role: SpaceRole.OWNER,
+        },
+      }
+    } else if (dto.role === 'MEMBER') {
+      where.members = {
+        some: {
+          userId,
+          role: {
+            not: SpaceRole.OWNER,
+          },
+        },
+      }
+    } else {
+      where.members = {
+        some: {
+          userId,
+        },
+      }
+    }
+
+    if (dto.search) {
+      where.OR = [
+        {
+          name: {
+            contains: dto.search,
+          },
+        },
+        {
+          slug: {
+            contains: dto.search,
+          },
+        },
+      ]
+    }
+
+    if (dto.type) {
+      where.type = dto.type
+    }
+
+    const orderBy = {
+      [dto.sortBy || 'createdAt']: dto.sortOrder || 'desc',
+    }
+
+    return paginate(
+      this.prisma.space,
+      { page: dto.page, limit: dto.limit },
+      {
+        where,
+        orderBy,
+      },
+    )
   }
 
   async update(uuid: string, data: Prisma.SpaceUpdateInput) {

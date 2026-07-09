@@ -4,7 +4,7 @@ export interface PaginateOptions {
 }
 
 export interface PaginatedResult<T> {
-  data: T[]
+  items: T[]
   meta: {
     total: number
     page: number
@@ -34,10 +34,10 @@ export async function paginate<T, Args>(
     skip: (page - 1) * limit,
   }
 
-  const [total, data] = await Promise.all([model.count(countArgs), model.findMany(findManyArgs)])
+  const [total, items] = await Promise.all([model.count(countArgs), model.findMany(findManyArgs)])
 
   return {
-    data,
+    items,
     meta: {
       total,
       page,

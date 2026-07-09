@@ -16,6 +16,7 @@ import { SPACE_MEMBER_LIMITS } from 'src/common/constants'
 import { generateSlug } from 'src/common/utils'
 import { MailService } from '../../core/mail/mail.service'
 import { RedisService } from '../../core/redis/redis.service'
+import { GetSpacesDto } from './dto/get-spaces.dto'
 
 @Injectable()
 export class SpacesService {
@@ -59,12 +60,12 @@ export class SpacesService {
     return this.spacesRepository.create(spaceData)
   }
 
-  async findAllForUser(userId: number) {
-    return this.spacesRepository.findManyByUserId(userId)
+  async findAllForUser(userId: number, dto: GetSpacesDto) {
+    return this.spacesRepository.findManyForUser(userId, dto)
   }
 
-  async findOne(uuid: string, requesterId: number) {
-    const space = await this.spacesRepository.findByUuid(uuid)
+  async findOne(uuidOrSlug: string, requesterId: number) {
+    const space = await this.spacesRepository.findByUuidOrSlug(uuidOrSlug)
     if (!space) {
       throw new NotFoundException('Space not found')
     }

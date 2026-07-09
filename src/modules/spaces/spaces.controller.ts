@@ -25,6 +25,8 @@ import { SpaceMemberStatus, SpaceRole } from '../../../generated/prisma/client'
 import { SpaceRoleGuard } from '../../common/guards/space-role.guard'
 import { RolesInSpace } from '../../common/decorators/space-roles.decorator'
 
+import { GetSpacesDto } from './dto/get-spaces.dto'
+
 export interface RequestWithSpaceRole extends Request {
   spaceId: number
   spaceMember: { role: SpaceRole; status: SpaceMemberStatus }
@@ -46,8 +48,8 @@ export class SpacesController {
   }
 
   @Get()
-  async findAll(@CurrentUser('id') userId: number) {
-    return this.spacesService.findAllForUser(userId)
+  async findAll(@CurrentUser('id') userId: number, @Query() dto: GetSpacesDto) {
+    return this.spacesService.findAllForUser(userId, dto)
   }
 
   @Get('search')
