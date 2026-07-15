@@ -117,7 +117,7 @@ export class SpacesController {
   @UseGuards(SpaceRoleGuard)
   @RolesInSpace(SpaceRole.ADMIN)
   async createInvite(@Body() dto: CreateInviteDto, @Req() req: RequestWithSpaceRole) {
-    const inviterName = req.user.displayName || req.user.username || req.user.email || 'Someone'
+    const inviterName = req.user.displayName || req.user.username || req.user.email
     return this.spacesService.createInvite(req.spaceId, dto, req.user.id, inviterName)
   }
 

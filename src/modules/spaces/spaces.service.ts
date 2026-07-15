@@ -423,15 +423,6 @@ export class SpacesService {
     }
 
     await this.redisService.del(`space:member:${space.id}:${userId}`)
-
-    return {
-      status,
-      space: {
-        uuid: space.uuid,
-        name: space.name,
-        slug: space.slug,
-      },
-    }
   }
 
   async approveMember(spaceId: number, memberUserId: number) {

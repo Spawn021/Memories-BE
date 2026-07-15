@@ -5,6 +5,7 @@ import {
   ForbiddenException,
   UnauthorizedException,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { SpaceRole, SpaceMemberStatus } from '../../../generated/prisma/client'
@@ -34,7 +35,7 @@ export class SpaceRoleGuard implements CanActivate {
 
     const spaceUuid = request.params.uuid
     if (!spaceUuid) {
-      return true
+      throw new BadRequestException('Space ID is required')
     }
 
     const userId = user.id
