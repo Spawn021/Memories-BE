@@ -8,7 +8,5 @@ export const RegisterSchema = z.object({
     .string()
     .min(8, ErrorCode.PASSWORD_MIN_LENGTH)
     .regex(/^(?=.*[a-z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/, ErrorCode.PASSWORD_WEAK),
-  displayName: z.string().optional(),
-  username: z.string().optional(),
 })
 export class RegisterDto extends createZodDto(RegisterSchema) {}

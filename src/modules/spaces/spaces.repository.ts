@@ -111,8 +111,12 @@ export class SpacesRepository {
       ]
     }
 
-    if (dto.type) {
-      where.type = dto.type
+    if (dto.type && dto.type.length > 0) {
+      where.type = { in: dto.type }
+    }
+
+    if (dto.visibility && dto.visibility.length > 0) {
+      where.visibility = { in: dto.visibility }
     }
 
     const orderBy = {
@@ -125,6 +129,21 @@ export class SpacesRepository {
       {
         where,
         orderBy,
+        include: {
+          members: {
+            where: { status: 'ACTIVE' },
+            select: {
+              user: {
+                select: {
+                  id: true,
+                  profile: {
+                    select: { displayName: true, avatarUrl: true },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     )
   }

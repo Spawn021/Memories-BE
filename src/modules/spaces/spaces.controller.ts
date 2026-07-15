@@ -129,7 +129,7 @@ export class SpacesController {
 
   @Post('invites/accept')
   async acceptInvite(@Body() dto: AcceptInviteDto, @CurrentUser('id') userId: number) {
-    return this.spacesService.acceptInvite(dto.token, userId)
+    return this.spacesService.acceptInvite(dto.token, userId, dto.message)
   }
 
   @Post(':uuid/join-request')

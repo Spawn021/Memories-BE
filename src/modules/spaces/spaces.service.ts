@@ -277,7 +277,7 @@ export class SpacesService {
     }
   }
 
-  async acceptInvite(token: string, userId: number) {
+  async acceptInvite(token: string, userId: number, message?: string) {
     const invite = await this.spacesRepository.findInviteByToken(token)
     if (!invite || invite.isRevoked || invite.space.deletedAt !== null) {
       throw new NotFoundException('Invite link is invalid or has been revoked')
@@ -330,6 +330,7 @@ export class SpacesService {
         status,
         role,
         invite.createdBy,
+        message || null,
       )
     } else {
       await this.spacesRepository.addMember(
@@ -338,7 +339,7 @@ export class SpacesService {
         role,
         invite.createdBy,
         status,
-        null,
+        message || null,
       )
     }
 

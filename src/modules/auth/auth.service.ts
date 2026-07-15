@@ -57,12 +57,6 @@ export class AuthService {
       uuid,
       email: dto.email,
       status: UserStatus.PENDING,
-      profile: {
-        create: {
-          displayName: dto.displayName || null,
-          username: dto.username || null,
-        },
-      },
       authAccounts: {
         create: {
           provider: AuthProvider.EMAIL,
