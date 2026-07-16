@@ -17,6 +17,7 @@ import { generateSlug } from 'src/common/utils'
 import { MailService } from '../../core/mail/mail.service'
 import { RedisService } from '../../core/redis/redis.service'
 import { GetSpacesDto } from './dto/get-spaces.dto'
+import { PaginationDto } from '../../common/dto/pagination.dto'
 
 @Injectable()
 export class SpacesService {
@@ -220,7 +221,6 @@ export class SpacesService {
 
     const token = uuidv4()
     const expiresAt = new Date(Date.now() + dto.expiresInHours * 60 * 60 * 1000)
-
     const inviteData = {
       spaceId,
       createdBy: requestUserId,
@@ -268,6 +268,7 @@ export class SpacesService {
         uuid: invite.space.uuid,
         name: invite.space.name,
         avatarUrl: invite.space.avatarUrl,
+        slug: invite.space.slug,
       },
       creator: {
         id: invite.creator.id,
@@ -471,5 +472,9 @@ export class SpacesService {
     }
 
     await this.spacesRepository.updateInviteStatus(inviteId, true)
+  }
+
+  async findSentRequests(userId: number, dto: PaginationDto) {
+    return this.spacesRepository.findSentRequests(userId, dto)
   }
 }

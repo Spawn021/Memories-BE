@@ -26,6 +26,7 @@ import { SpaceRoleGuard } from '../../common/guards/space-role.guard'
 import { RolesInSpace } from '../../common/decorators/space-roles.decorator'
 
 import { GetSpacesDto } from './dto/get-spaces.dto'
+import { PaginationDto } from '../../common/dto/pagination.dto'
 
 export interface RequestWithSpaceRole extends Request {
   spaceId: number
@@ -55,6 +56,11 @@ export class SpacesController {
   @Get('search')
   async search(@Query('q') q: string) {
     return this.spacesService.search(q || '')
+  }
+
+  @Get('requests/sent')
+  async findSentRequests(@CurrentUser('id') userId: number, @Query() dto: PaginationDto) {
+    return this.spacesService.findSentRequests(userId, dto)
   }
 
   @Get(':uuid')

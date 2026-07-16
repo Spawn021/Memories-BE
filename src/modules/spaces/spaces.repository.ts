@@ -3,6 +3,7 @@ import { PrismaService } from '../../core/prisma/prisma.service'
 import { Prisma, SpaceRole, SpaceMemberStatus } from '../../../generated/prisma/client'
 import { paginate, PaginateOptions } from '../../common/utils/prisma-paginate'
 import { GetSpacesDto } from './dto/get-spaces.dto'
+import { PaginationDto } from '../../common/dto/pagination.dto'
 
 export interface SpaceMemberFilter {
   status?: SpaceMemberStatus
@@ -77,6 +78,7 @@ export class SpacesRepository {
         some: {
           userId,
           role: SpaceRole.OWNER,
+          status: SpaceMemberStatus.ACTIVE,
         },
       }
     } else if (dto.role === 'MEMBER') {
@@ -86,12 +88,14 @@ export class SpacesRepository {
           role: {
             not: SpaceRole.OWNER,
           },
+          status: SpaceMemberStatus.ACTIVE,
         },
       }
     } else {
       where.members = {
         some: {
           userId,
+          status: SpaceMemberStatus.ACTIVE,
         },
       }
     }
@@ -335,5 +339,42 @@ export class SpacesRepository {
     return this.prisma.space.findUnique({
       where: { id, deletedAt: null },
     })
+  }
+
+  async findSentRequests(userId: number, dto: PaginationDto) {
+    const where: Prisma.SpaceMemberWhereInput = {
+      userId,
+      status: {
+        in: [SpaceMemberStatus.PENDING, SpaceMemberStatus.REJECTED],
+      },
+      space: {
+        deletedAt: null,
+      },
+    }
+
+    return paginate(
+      this.prisma.spaceMember,
+      { page: dto.page, limit: dto.limit },
+      {
+        where,
+        include: {
+          space: true,
+          inviter: {
+            select: {
+              email: true,
+              profile: {
+                select: {
+                  displayName: true,
+                  avatarUrl: true,
+                },
+              },
+            },
+          },
+        },
+        orderBy: {
+          updatedAt: 'desc',
+        },
+      },
+    )
   }
 }
