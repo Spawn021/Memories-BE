@@ -13,7 +13,7 @@ export class UsersController {
     const fullUser = await this.usersService.findOneById(user.id)
     if (!fullUser) return null
     return {
-      id: fullUser.id.toString(),
+      id: fullUser.id,
       uuid: fullUser.uuid,
       email: fullUser.email,
       globalRole: fullUser.globalRole,
@@ -34,7 +34,7 @@ export class UsersController {
     const fullUser = await this.usersService.findOneById(user.id)
     if (!fullUser) return null
     return {
-      id: fullUser.id.toString(),
+      id: fullUser.id,
       uuid: fullUser.uuid,
       email: fullUser.email,
       globalRole: fullUser.globalRole,

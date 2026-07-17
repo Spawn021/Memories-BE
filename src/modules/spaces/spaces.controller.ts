@@ -26,7 +26,7 @@ import { SpaceRoleGuard } from '../../common/guards/space-role.guard'
 import { RolesInSpace } from '../../common/decorators/space-roles.decorator'
 
 import { GetSpacesDto } from './dto/get-spaces.dto'
-import { PaginationDto } from '../../common/dto/pagination.dto'
+import { GetSentRequestsDto } from './dto/get-sent-requests.dto'
 
 export interface RequestWithSpaceRole extends Request {
   spaceId: number
@@ -59,7 +59,7 @@ export class SpacesController {
   }
 
   @Get('requests/sent')
-  async findSentRequests(@CurrentUser('id') userId: number, @Query() dto: PaginationDto) {
+  async findSentRequests(@CurrentUser('id') userId: number, @Query() dto: GetSentRequestsDto) {
     return this.spacesService.findSentRequests(userId, dto)
   }
 
@@ -145,6 +145,12 @@ export class SpacesController {
     @CurrentUser('id') userId: number,
   ) {
     return this.spacesService.requestToJoin(uuid, userId, dto.message || undefined)
+  }
+
+  @Delete(':uuid/join-request')
+  async withdrawJoinRequest(@Param('uuid') uuid: string, @CurrentUser('id') userId: number) {
+    await this.spacesService.withdrawJoinRequest(uuid, userId)
+    return { message: 'Join request withdrawn successfully.' }
   }
 
   @Post(':uuid/members/:memberUserId/approve')

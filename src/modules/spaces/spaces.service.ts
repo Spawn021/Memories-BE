@@ -17,7 +17,7 @@ import { generateSlug } from 'src/common/utils'
 import { MailService } from '../../core/mail/mail.service'
 import { RedisService } from '../../core/redis/redis.service'
 import { GetSpacesDto } from './dto/get-spaces.dto'
-import { PaginationDto } from '../../common/dto/pagination.dto'
+import { GetSentRequestsDto } from './dto/get-sent-requests.dto'
 
 @Injectable()
 export class SpacesService {
@@ -54,6 +54,7 @@ export class SpacesService {
         create: {
           userId: ownerId,
           role: SpaceRole.OWNER,
+          joinedAt: new Date(),
         },
       },
     }
@@ -113,7 +114,14 @@ export class SpacesService {
   }
 
   async search(query: string) {
-    return this.spacesRepository.searchSpaces(query)
+    const spaces = await this.spacesRepository.searchSpaces(query)
+    return spaces.map(space => {
+      const { _count, ...rest } = space
+      return {
+        ...rest,
+        activeMember: _count?.members || 0,
+      }
+    })
   }
 
   async findMembers(spaceId: number, requesterRole: SpaceRole, query: GetSpaceMembersDto) {
@@ -269,6 +277,7 @@ export class SpacesService {
         name: invite.space.name,
         avatarUrl: invite.space.avatarUrl,
         slug: invite.space.slug,
+        visibility: invite.space.visibility,
       },
       creator: {
         id: invite.creator.id,
@@ -345,15 +354,6 @@ export class SpacesService {
     }
 
     await this.redisService.del(`space:member:${invite.spaceId}:${userId}`)
-
-    return {
-      status,
-      space: {
-        uuid: invite.space.uuid,
-        name: invite.space.name,
-        slug: invite.space.slug,
-      },
-    }
   }
 
   async requestToJoin(spaceUuid: string, userId: number, message?: string) {
@@ -378,7 +378,9 @@ export class SpacesService {
         if (nextAllowedRequestDate > new Date()) {
           const diffMs = nextAllowedRequestDate.getTime() - Date.now()
           const diffHours = Math.ceil(diffMs / (1000 * 60 * 60))
-          throw new BadRequestException(`You can request to join again in ${diffHours} hour(s)`)
+          throw new BadRequestException(
+            `Your last request was rejected. You can request to join again in ${diffHours} hour(s)`,
+          )
         }
       }
     }
@@ -423,6 +425,25 @@ export class SpacesService {
       )
     }
 
+    await this.redisService.del(`space:member:${space.id}:${userId}`)
+  }
+
+  async withdrawJoinRequest(spaceUuid: string, userId: number) {
+    const space = await this.spacesRepository.findByUuid(spaceUuid)
+    if (!space) {
+      throw new NotFoundException('Space not found')
+    }
+
+    const member = await this.spacesRepository.findMember(space.id, userId)
+    if (!member) {
+      throw new NotFoundException('Join request not found')
+    }
+
+    if (member.status !== SpaceMemberStatus.PENDING) {
+      throw new BadRequestException('You can only withdraw pending requests')
+    }
+
+    await this.spacesRepository.deleteMember(space.id, userId)
     await this.redisService.del(`space:member:${space.id}:${userId}`)
   }
 
@@ -474,7 +495,7 @@ export class SpacesService {
     await this.spacesRepository.updateInviteStatus(inviteId, true)
   }
 
-  async findSentRequests(userId: number, dto: PaginationDto) {
+  async findSentRequests(userId: number, dto: GetSentRequestsDto) {
     return this.spacesRepository.findSentRequests(userId, dto)
   }
 }

@@ -192,7 +192,7 @@ model SpaceMember {
   role               SpaceRole         @default(CONTRIBUTOR)
   status             SpaceMemberStatus @default(ACTIVE)
   joinRequestMessage String?           @db.Text @map("join_request_message")
-  joinedAt           DateTime          @default(now()) @map("joined_at")
+  joinedAt           DateTime?         @map("joined_at")
   invitedBy          Int?              @map("invited_by")
   createdAt          DateTime          @default(now()) @map("created_at")
   updatedAt          DateTime          @default(now()) @updatedAt @map("updated_at")

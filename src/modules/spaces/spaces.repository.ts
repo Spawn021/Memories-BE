@@ -3,7 +3,7 @@ import { PrismaService } from '../../core/prisma/prisma.service'
 import { Prisma, SpaceRole, SpaceMemberStatus } from '../../../generated/prisma/client'
 import { paginate, PaginateOptions } from '../../common/utils/prisma-paginate'
 import { GetSpacesDto } from './dto/get-spaces.dto'
-import { PaginationDto } from '../../common/dto/pagination.dto'
+import { GetSentRequestsDto } from './dto/get-sent-requests.dto'
 
 export interface SpaceMemberFilter {
   status?: SpaceMemberStatus
@@ -183,6 +183,7 @@ export class SpacesRepository {
     status?: SpaceMemberStatus,
     joinRequestMessage?: string | null,
   ) {
+    const isActive = !status || status === SpaceMemberStatus.ACTIVE
     return this.prisma.spaceMember.create({
       data: {
         spaceId,
@@ -191,6 +192,7 @@ export class SpacesRepository {
         invitedBy,
         status,
         joinRequestMessage,
+        ...(isActive ? { joinedAt: new Date() } : {}),
       },
     })
   }
@@ -278,7 +280,10 @@ export class SpacesRepository {
       where: {
         uq_space_user: { spaceId, userId },
       },
-      data: { status },
+      data: {
+        status,
+        ...(status === SpaceMemberStatus.ACTIVE ? { joinedAt: new Date() } : {}),
+      },
     })
   }
 
@@ -290,11 +295,45 @@ export class SpacesRepository {
   }
 
   async searchSpaces(query: string) {
+    const include = {
+      members: {
+        select: {
+          userId: true,
+          role: true,
+          status: true,
+        },
+      },
+      _count: {
+        select: {
+          members: {
+            where: {
+              status: SpaceMemberStatus.ACTIVE,
+            },
+          },
+        },
+      },
+    }
+
+    if (!query) {
+      return this.prisma.space.findMany({
+        where: {
+          deletedAt: null,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 5,
+        include,
+      })
+    }
+
     return this.prisma.space.findMany({
       where: {
         deletedAt: null,
         OR: [{ name: { contains: query } }, { slug: { contains: query } }],
       },
+      take: 20,
+      include,
     })
   }
 
@@ -323,7 +362,13 @@ export class SpacesRepository {
       where: {
         uq_space_user: { spaceId, userId },
       },
-      data: { status, role, invitedBy, joinRequestMessage },
+      data: {
+        status,
+        role,
+        invitedBy,
+        joinRequestMessage,
+        ...(status === SpaceMemberStatus.ACTIVE ? { joinedAt: new Date() } : {}),
+      },
     })
   }
 
@@ -341,7 +386,7 @@ export class SpacesRepository {
     })
   }
 
-  async findSentRequests(userId: number, dto: PaginationDto) {
+  async findSentRequests(userId: number, dto: GetSentRequestsDto) {
     const where: Prisma.SpaceMemberWhereInput = {
       userId,
       status: {
@@ -350,6 +395,40 @@ export class SpacesRepository {
       space: {
         deletedAt: null,
       },
+    }
+
+    if (dto.search) {
+      where.space = {
+        deletedAt: null,
+        OR: [{ name: { contains: dto.search } }, { slug: { contains: dto.search } }],
+      }
+    }
+
+    let orderBy: Prisma.SpaceMemberOrderByWithRelationInput = {
+      updatedAt: 'desc',
+    }
+
+    if (dto.sortBy) {
+      const order = dto.sortOrder || 'desc'
+      if (dto.sortBy === 'spaceName') {
+        orderBy = {
+          space: {
+            name: order,
+          },
+        }
+      } else if (dto.sortBy === 'invitedBy.fullName') {
+        orderBy = {
+          inviter: {
+            profile: {
+              displayName: order,
+            },
+          },
+        }
+      } else {
+        orderBy = {
+          [dto.sortBy]: order,
+        }
+      }
     }
 
     return paginate(
@@ -371,9 +450,7 @@ export class SpacesRepository {
             },
           },
         },
-        orderBy: {
-          updatedAt: 'desc',
-        },
+        orderBy,
       },
     )
   }
